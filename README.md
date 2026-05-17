@@ -1,58 +1,103 @@
-# Python_Lumerical Lib
-Documentation under  https://martinmiroslavovmihaylov.github.io/Python_Lumerical/
+# Project Documentation (Sphinx) — `docu` branch
 
-# Hot to use
-Clone or download the git repo.
-Find the path to your lumapi.py Lumerical file.
+This branch contains only the **Sphinx sources**.  
+Docs are built on every push to `main` and deployed to **GitHub Pages** via GitHub Actions.
 
+## GitHub Pages (CI/CD)
 
-# FDE Solver Components
+The workflow lives on **`main`** (not here). Create `.github/workflows/docs.yml` on `main`.
 
-| Component | Picture |
-| :--------: | :-----: |
-| **Waveguide** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDE_WG.png?raw=true) |
+Then in the repository: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
+### Expected git layout
 
-# Only EME Solver Components
+```
+(main)  <repo root>/
+  Analytic Tools/
+  Examples/
+  ...
 
-| Component | Picture |
-| :--------: | :-----: |
-| **Wavelength Division Multiplexing (WDM)** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/EME_WDM.png?raw=true) |
-
-
-# Only FDTD Solver Components
-
-| Component | Picture |
-| :--------: | :-----: |
-| **90 Grad arced Waveguide** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDTD_Arc_90.png?raw=true) |
-| **180 Grad arced Waveguide** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDTD_Arc_180.png?raw=true) |
-| **S-Bends Waveguide (Bezier and Cosinus Functions)** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDTD_S_Bends.png?raw=true) |
-| **Straight Grating Coupler** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDTD_Str_GC.png?raw=true) |
-| **Ring Grating Coupler** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDTD_Ring_GC.png?raw=true) |
+(docu)  <this branch root>/
+  conf.py
+  index.rst (or .md)
+  _rst/  _static/  _templates/
+  Examples/*.rst
+  requirements-docs.txt
+```
 
 
+## Build locally
 
-# EME and FDTD Solver Components
+> Prereqs: Python 3.11+, `pip` (ideally inside a virtualenv).
+
+### About the layout
+Sphinx needs to import your package to build API docs. This `docu` branch assumes you have a **sibling checkout** of your code at `../Python_Instruments_Automation_Scripts` relative to this folder, e.g.:
+
+```
+/parent-folder/
+  ├─ Python_Signal_Processing/   # your code repo (branch: main)
+  └─ Documentation_Signal_Processing/                           # this docs worktree/clone (branch: docu)
+```
+
+Create a git worktree. From the main branch run:
+```
+git fetch origin
+git worktree add ../Documentation docu
+git worktree list
+```
+
+To delete run:
+```
+git worktree remove ../Documentation
+```
+
+If your code is elsewhere, that’s fine—**set `CODE_DIR` to the absolute path** of the code repo root before building.
+
+### 1) Install doc dependencies
+- **bash/Powershell**
+  ```TODO
+  ```
+
+### 2) Make the package importable for autodoc (set `CODE_DIR`)
+
+- **Windows (PowerShell)**
+  ```powershell
+  # If your code is a sibling folder (recommended):
+  $env:CODE_DIR = (Resolve-Path ..\Python_Signal_Processing).Path
+  # Or point to any absolute path where your code repo lives:
+  # $env:CODE_DIR = "C:\path\to\Python_Signal_Processing"
+  ```
+- **macOS/Linux (bash)**
+  ```bash
+  # If your code is a sibling folder (recommended):
+  export CODE_DIR="$(cd ../Python_Signal_Processing && pwd)"
+  # Or point to any absolute path where your code repo lives:
+  # export CODE_DIR="/abs/path/to/Python_Signal_Processing"
+  ```
+
+### 3) Regenerate API stubs (optional, recommended when modules change)
+- **Windows**
+  ```powershell
+  sphinx-apidoc -o _rst --separate --force --no-toc -t _templates\apidoc ..\Python_Signal_Processing\AnalyticsTools
+  ```
+- **macOS/Linux**
+  ```bash
+  sphinx-apidoc -o _rst --separate --force --no-toc -t _templates/apidoc ../Python_Signal_Processing/AnalyticsTools
+  ```
+
+### 4) Build HTML
+- **Windows**
+  ```powershell
+  .\make.bat html
+  ```
+- **macOS/Linux**
+  ```bash
+  make html
+  ```
+
+Open `_build/html/index.html` in your browser.
+
+---
 
 
-| Component | Picture |
-| :--------: | :-----: |
-| **1x2 MMI** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/EME_MMI2x1.png?raw=true) |
-| **1x2 MMI** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/EME_MMI2x1.png?raw=true) |
-| **2x2 MMI** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDTD_S_Bends.png?raw=true) |
-| **2x2 MMI** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/EME_MMI2x2_Taper.png?raw=true) |
-| **Directional Coupler** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/EME_DC.png?raw=true) |
-| **Staright Waveguide** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/FDE_WG.png?raw=true) |
-| **Inverse Taper** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/EME_Invereaper.png?raw=true) |
-| **Cascaded MMI structures** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/Cascadet_MMI.png?raw=true) |
-
-
-
-  
-  
-# CHARGE and FEEM Solver
-
-| Component | Picture |
-| :--------: | :-----: |
-| **MZM** | ![](https://github.com/MartinMiroslavovMihaylov/Python_Lumerical/blob/main/docs/Doc_Images/MZM.png?raw=true) |
 
