@@ -19,8 +19,13 @@ The repository includes functions to:
 - Compute group delay from S-parameters
 - Calculate stability factors (μ and μ') from S-parameters
 - Determine and plot the 1 dB compression point
+- Calculate IIP3 from a two-tone transient/IMD sweep (not tested!)
+- Calculate and plot IIP3 from a two-tone transient/IMD sweep (not tested!)
+- Plot IIP3 from harmonic balance data from cadence  
 - Generate eye diagrams
 - Import and prepare data from `.csv` files for plotting
+- Create an HBT DC operating-point table from old or new CSV data (Tested on G3Cu and H7 PDKs)
+- Read a source operating-point CSV file and create a formatted table (Tested on G3Cu and H7 PDKs)
 
 ## Documentation
 

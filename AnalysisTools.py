@@ -2,6 +2,8 @@ import numpy as np
 from scipy.interpolate import interp1d
 from numpy import polyfit, polyval
 import pandas as pd
+import matplotlib.pyplot as plt
+plt.rcParams.update({"font.size":22})
 
 
 
@@ -234,10 +236,8 @@ class AnalysisTools:
                 MaxCurrent = 1.45*(Width - 0.06)
             elif Metal == "M2" or Metal == "M3" or Metal == "M4":
                 MaxCurrent = 1.43 * (Width - 0.05)
-            elif Metal == "TC1":
+            elif Metal == "TC1" or Metal == "TC2":
                 MaxCurrent = 13.6 * (Width - 0.2)
-            elif Metal == "TC2":
-                MaxCurrent = 13.6* (Width - 0.2)
             elif Metal == "ThinAl":
                 MaxCurrent = 1.22* (Width - 0.06)
             elif Metal == "ThickAl":
@@ -386,9 +386,9 @@ class AnalysisTools:
 
     How to set the Simulation Testbench
                            __________
-            Port 1 o------|          |-----o Port 2
+            Port 1 o------|          |-----o Port 3
                           |   DUT    |
-            Port 3 o------|__________|-----o Port 4    
+            Port 2 o------|__________|-----o Port 4    
                          
                            __________
                           |          |
@@ -438,94 +438,129 @@ class AnalysisTools:
 
         if self.Parameters_size == 4:
 
-            # Transform Parameters
-            S11= self.S11_re + 1j*self.S11_im
-            S12= self.S12_re + 1j*self.S12_im
-            S13= self.S13_re + 1j*self.S13_im
-            S14= self.S14_re + 1j*self.S14_im
-            S21= self.S21_re + 1j*self.S21_im
-            S22= self.S22_re + 1j*self.S22_im
-            S23= self.S23_re + 1j*self.S23_im
-            S24= self.S24_re + 1j*self.S24_im
-            S31= self.S31_re + 1j*self.S31_im
-            S32= self.S32_re + 1j*self.S32_im
-            S33= self.S33_re + 1j*self.S33_im
-            S34= self.S34_re + 1j*self.S34_im
-            S41= self.S41_re + 1j*self.S41_im
-            S42= self.S42_re + 1j*self.S42_im
-            S43= self.S43_re + 1j*self.S43_im
-            S44= self.S44_re + 1j*self.S44_im
+            S11 = self.S11_re + 1j*self.S11_im
+            S12 = self.S12_re + 1j*self.S12_im
+            S13 = self.S13_re + 1j*self.S13_im
+            S14 = self.S14_re + 1j*self.S14_im
 
+            S21 = self.S21_re + 1j*self.S21_im
+            S22 = self.S22_re + 1j*self.S22_im
+            S23 = self.S23_re + 1j*self.S23_im
+            S24 = self.S24_re + 1j*self.S24_im
 
+            S31 = self.S31_re + 1j*self.S31_im
+            S32 = self.S32_re + 1j*self.S32_im
+            S33 = self.S33_re + 1j*self.S33_im
+            S34 = self.S34_re + 1j*self.S34_im
 
+            S41 = self.S41_re + 1j*self.S41_im
+            S42 = self.S42_re + 1j*self.S42_im
+            S43 = self.S43_re + 1j*self.S43_im
+            S44 = self.S44_re + 1j*self.S44_im
 
-            # Differential - Differential
-            SDD11 = 0.5*(S11 - S13 - S31 + S33) # is the ratio of the differential signal coming out of Port 1 to the differential signal going into Port 1. It is the differential RL out of Port 1.
-            SDD12 = 0.5*(S12 - S14 - S32 + S34) # is the ratio of the differential signal coming out of Port 1 to the differential signal going into Port 2. It is the differential IL from Port 2 to Port 1.
-            SDD21 = 0.5*(S21 - S23 - S41 + S43) # is the ratio of the differential signal coming out of Port 2 to the differential signal going into Port 1. It is the differential IL from Port 1 to Port 2. 
-            SDD22 = 0.5*(S22 - S24 - S42 + S44) # is the ratio of the differential signal coming out of Port 2 to the differential signal going into Port 2. It is the differential RL out of Port 2.
+            # ==========================================================
+            # DIFFERENTIAL - DIFFERENTIAL
+            # ==========================================================
 
-            # Common-Differential 
-            SDC11 = 0.5*(S11 + S13 - S31 - S33) # is the ratio of the differential signal coming out of Port 1 to the common signal going into Port 1.
-            SDC12 = 0.5*(S12 + S14 - S32 - S34) # is the ratio of the differential signal coming out of Port 1 to the common signal going into Port 2.
-            SDC21 = 0.5*(S21 + S23 - S41 - S43) # is the ratio of the differential signal coming out of Port 2 to the common signal going into Port 1.
-            SDC22 = 0.5*(S22 + S24 - S42 - S44) # is the ratio of the differential signal coming out of Port 2 to the common signal going into Port 2.
+            SDD11 = 0.5 * (S11 - S12 - S21 + S22)
 
-            # Differential-Common
-            SCD11 = 0.5*(S11 - S13 + S31 - S33) # is the ratio of the common signal coming out of Port 1 to the differential signal going into Port 1.
-            SCD12 = 0.5*(S12 - S14 + S32 - S34) # is the ratio of the common signal coming out of Port 1 to the differential signal going into Port 2.
-            SCD21 = 0.5*(S21 - S23 + S41 - S43) # is the ratio of the common signal coming out of Port 2 to the differential signal going into Port 1.
-            SCD22 = 0.5*(S22 - S24 + S42 - S44) # is the ratio of the common signal coming out of Port 2 to the differential signal going into Port 2.
+            SDD12 = 0.5 * (S14 - S13 - S24 + S23)
 
-            # Common-Common 
-            SCC11 = 0.5*(S11 + S13 + S31 + S33) # is the ratio of the common signal coming out of Port 1 to the common signal going into Port 1.
-            SCC12 = 0.5*(S12 + S14 + S32 + S34) # is the ratio of the common signal coming out of Port 1 to the common signal going into Port 2.
-            SCC21 = 0.5*(S21 + S23 + S41 + S43) # is the ratio of the common signal coming out of Port 2 to the common signal going into Port 1.
-            SCC22 = 0.5*(S22 + S24 + S42 + S44) # is the ratio of the common signal coming out of Port 2 to the common signal going into Port 2.
+            SDD21 = 0.5 * (S41 - S42 - S31 + S32)
 
-            SDD = {}
-            SDD["Frequency"] = self.frequency
-            SDD["SDD11"] = 20*np.log10(np.abs(SDD11))
-            SDD["SDD12"] = 20*np.log10(np.abs(SDD12))
-            SDD["SDD21"] = 20*np.log10(np.abs(SDD21))
-            SDD["SDD22"] = 20*np.log10(np.abs(SDD22))
+            SDD22 = 0.5 * (S44 - S43 - S34 + S33)
 
-            SDC = {}
-            SDC["Frequency"] = self.frequency
-            SDC["SDC11"] = 20*np.log10(np.abs(SDC11))
-            SDC["SDC12"] = 20*np.log10(np.abs(SDC12))
-            SDC["SDC21"] = 20*np.log10(np.abs(SDC21))
-            SDC["SDC22"] = 20*np.log10(np.abs(SDC22))
+            # ==========================================================
+            # DIFFERENTIAL - COMMON
+            #
+            # Output differential due to common excitation
+            # ==========================================================
 
-            SCD = {}
-            SCD["Frequency"] = self.frequency
-            SCD["SCD11"] = 20*np.log10(np.abs(SCD11))
-            SCD["SCD12"] = 20*np.log10(np.abs(SCD12))
-            SCD["SCD21"] = 20*np.log10(np.abs(SCD21))
-            SCD["SCD22"] = 20*np.log10(np.abs(SCD22))
+            SDC11 = 0.5 * (S11 + S12 - S21 - S22)
 
-            SCC = {}
-            SCC["Frequency"] = self.frequency
-            SCC["SCC11"] = 20*np.log10(np.abs(SCC11))
-            SCC["SCC12"] = 20*np.log10(np.abs(SCC12))
-            SCC["SCC21"] = 20*np.log10(np.abs(SCC21))
-            SCC["SCC22"] = 20*np.log10(np.abs(SCC22))
+            SDC12 = 0.5 * (S14 + S13 - S24 - S23)
 
+            SDC21 = 0.5 * (S41 + S42 - S31 - S32)
+
+            SDC22 = 0.5 * (S44 + S43 - S34 - S33)
+
+            # ==========================================================
+            # COMMON - DIFFERENTIAL
+            #
+            # Output common due to differential excitation
+            # ==========================================================
+
+            SCD11 = 0.5 * (S11 - S12 + S21 - S22)
+
+            SCD12 = 0.5 * (S14 - S13 + S24 - S23)
+
+            SCD21 = 0.5 * (S41 - S42 + S31 - S32)
+
+            SCD22 = 0.5 * (S44 - S43 + S34 - S33)
+
+            # ==========================================================
+            # COMMON - COMMON
+            # ==========================================================
+
+            SCC11 = 0.5 * (S11 + S12 + S21 + S22)
+
+            SCC12 = 0.5 * (S14 + S13 + S24 + S23)
+
+            SCC21 = 0.5 * (S41 + S42 + S31 + S32)
+
+            SCC22 = 0.5 * (S44 + S43 + S34 + S33)
+
+            # ==========================================================
+            # Convert to dB
+            # ==========================================================
+
+            eps = 1e-20
+
+            SDD = {
+                "Frequency": self.frequency,
+                "SDD11": 20*np.log10(np.abs(SDD11) + eps),
+                "SDD12": 20*np.log10(np.abs(SDD12) + eps),
+                "SDD21": 20*np.log10(np.abs(SDD21) + eps),
+                "SDD22": 20*np.log10(np.abs(SDD22) + eps),
+            }
+
+            SDC = {
+                "Frequency": self.frequency,
+                "SDC11": 20*np.log10(np.abs(SDC11) + eps),
+                "SDC12": 20*np.log10(np.abs(SDC12) + eps),
+                "SDC21": 20*np.log10(np.abs(SDC21) + eps),
+                "SDC22": 20*np.log10(np.abs(SDC22) + eps),
+            }
+
+            SCD = {
+                "Frequency": self.frequency,
+                "SCD11": 20*np.log10(np.abs(SCD11) + eps),
+                "SCD12": 20*np.log10(np.abs(SCD12) + eps),
+                "SCD21": 20*np.log10(np.abs(SCD21) + eps),
+                "SCD22": 20*np.log10(np.abs(SCD22) + eps),
+            }
+
+            SCC = {
+                "Frequency": self.frequency,
+                "SCC11": 20*np.log10(np.abs(SCC11) + eps),
+                "SCC12": 20*np.log10(np.abs(SCC12) + eps),
+                "SCC21": 20*np.log10(np.abs(SCC21) + eps),
+                "SCC22": 20*np.log10(np.abs(SCC22) + eps),
+            }
 
             return SDD, SDC, SCD, SCC
-    
 
         else:
-            raise ValueError("This function works only when you need to calculate an 4-Port S-Parameters to 2-Port!")
-
-
+            raise ValueError(
+                "This function only works for 4-port S-parameter networks!"
+            )
 
 
     ########################################################
     # Impedanz calculator
     ########################################################
 
-    def Zc_Calc(self):
+    def Zc_Calc(self, Zref = 50):
 
         """
         Calculate the characteristic impedance from S-parameters.
@@ -583,7 +618,7 @@ class AnalysisTools:
             S11= SDD["SDD11"]
             S21= SDD["SDD21"]
 
-            Zc = 100 * np.sqrt( ((1+S11)**2 - S21**2)/ ((1-S11)**2 - S21**2) + 0j)
+            Zc = Zref * np.sqrt( ((1+S11)**2 - S21**2)/ ((1-S11)**2 - S21**2) + 0j)
 
             return Zc
 
@@ -593,7 +628,7 @@ class AnalysisTools:
             S11= 20*np.log10(np.abs(self.S11_re + 1j*self.S11_im))
             S21= 20*np.log10(np.abs(self.S21_re + 1j*self.S21_im))
 
-            Zc = 50 * np.sqrt( ((1+S11)**2 - S21**2)/ ((1-S11)**2 - S21**2) )
+            Zc = Zref * np.sqrt( ((1+S11)**2 - S21**2)/ ((1-S11)**2 - S21**2) )
 
             return Zc
 
@@ -624,9 +659,9 @@ class AnalysisTools:
 
         How to set the Simulation Testbench
                            __________
-            Port 1 o------|          |-----o Port 2
+            Port 1 o------|          |-----o Port 3
                           |   DUT    |
-            Port 3 o------|__________|-----o Port 4       
+            Port 2 o------|__________|-----o Port 4       
 
         Notes
         -----
@@ -696,8 +731,6 @@ class AnalysisTools:
             phi42 = np.unwrap(np.angle(S42))
             phi43 = np.unwrap(np.angle(S43))
             phi44 = np.unwrap(np.angle(S44))
-
-
 
             
             # caluclate group delay phi 
@@ -779,9 +812,9 @@ class AnalysisTools:
 
         How to set the Simulation Testbench
                            __________
-            Port 1 o------|          |-----o Port 2
+            Port 1 o------|          |-----o Port 3
                           |   DUT    |
-            Port 3 o------|__________|-----o Port 4     
+            Port 2 o------|__________|-----o Port 4     
 
         Notes
         -----
@@ -808,59 +841,173 @@ class AnalysisTools:
         """
 
        
+
+        # ==========================================================
+        # 4-PORT DIFFERENTIAL CASE
+        # ==========================================================
         if self.Parameters_size == 4:
 
+            # ------------------------------------------------------
+            # Build complex S-parameters
+            # ------------------------------------------------------
             S11 = self.S11_re + 1j*self.S11_im
             S12 = self.S12_re + 1j*self.S12_im
             S13 = self.S13_re + 1j*self.S13_im
             S14 = self.S14_re + 1j*self.S14_im
+
             S21 = self.S21_re + 1j*self.S21_im
             S22 = self.S22_re + 1j*self.S22_im
             S23 = self.S23_re + 1j*self.S23_im
             S24 = self.S24_re + 1j*self.S24_im
+
             S31 = self.S31_re + 1j*self.S31_im
             S32 = self.S32_re + 1j*self.S32_im
             S33 = self.S33_re + 1j*self.S33_im
             S34 = self.S34_re + 1j*self.S34_im
+
             S41 = self.S41_re + 1j*self.S41_im
             S42 = self.S42_re + 1j*self.S42_im
             S43 = self.S43_re + 1j*self.S43_im
             S44 = self.S44_re + 1j*self.S44_im
 
+            # ======================================================
+            # DIFFERENTIAL S-PARAMETERS
+            #
+            # Input pair  = (1,2)
+            # Output pair = (4,3)
+            # ======================================================
 
-            SDD11 = 0.5*(S11 - S13 - S31 + S33) # is the ratio of the differential signal coming out of Port 1 to the differential signal going into Port 1. It is the differential RL out of Port 1.
-            SDD12 = 0.5*(S12 - S14 - S32 + S34) # is the ratio of the differential signal coming out of Port 1 to the differential signal going into Port 2. It is the differential IL from Port 2 to Port 1.
-            SDD21 = 0.5*(S21 - S23 - S41 + S43) # is the ratio of the differential signal coming out of Port 2 to the differential signal going into Port 1. It is the differential IL from Port 1 to Port 2. 
-            SDD22 = 0.5*(S22 - S24 - S42 + S44) # is the ratio of the differential signal coming out of Port 2 to the differential signal going into Port 2. It is the differential RL out of Port 2.
+            # Differential input reflection
+            SDD11 = 0.5 * (S11 - S12 - S21 + S22)
 
+            # Differential forward transmission
+            SDD21 = 0.5 * (S41 - S42 - S31 + S32)
 
-            Delta = SDD11*SDD22 - SDD12*SDD21
+            # Differential reverse transmission
+            SDD12 = 0.5 * (S14 - S13 - S24 + S23)
 
-            mu = (1 - np.abs(SDD11)**2) / (np.abs(SDD22 - Delta * np.conj(SDD11)) + np.abs(SDD12 * SDD21))
+            # Differential output reflection
+            SDD22 = 0.5 * (S44 - S43 - S34 + S33)
 
-            # μ' (mu prime)
-            mu_prime = (1 - np.abs(SDD22)**2) / (np.abs(SDD11 - Delta * np.conj(SDD22)) + np.abs(SDD12 * SDD21))
+            # ======================================================
+            # Stability calculations
+            # ======================================================
+
+            Delta = SDD11 * SDD22 - SDD12 * SDD21
+
+            mu = ((1 - np.abs(SDD11)**2)/(np.abs(SDD22 - Delta * np.conj(SDD11))+ np.abs(SDD12 * SDD21)))
+
+            mu_prime = ((1 - np.abs(SDD22)**2)/(np.abs(SDD11 - Delta * np.conj(SDD22))+ np.abs(SDD12 * SDD21)))
 
             return mu, mu_prime
 
+        # ==========================================================
+        # STANDARD 2-PORT CASE
+        # ==========================================================
         else:
+
             S11 = self.S11_re + 1j*self.S11_im
             S12 = self.S12_re + 1j*self.S12_im
 
             S21 = self.S21_re + 1j*self.S21_im
             S22 = self.S22_re + 1j*self.S22_im
-        
 
-            Delta = S11*S22 - S12*S21
+            Delta = S11 * S22 - S12 * S21
 
-            mu = (1 - np.abs(S11)**2) / (np.abs(S22 - Delta * np.conj(S11)) + np.abs(S12 * S21))
+            mu = (
+                (1 - np.abs(S11)**2)
+                /
+                (
+                    np.abs(S22 - Delta * np.conj(S11))
+                    + np.abs(S12 * S21)
+                )
+            )
 
-            # μ' (mu prime)
-            mu_prime = (1 - np.abs(S22)**2) / (np.abs(S11 - Delta * np.conj(S22)) + np.abs(S12 * S21))
+            mu_prime = (
+                (1 - np.abs(S22)**2)
+                /
+                (
+                    np.abs(S11 - Delta * np.conj(S22))
+                    + np.abs(S12 * S21)
+                )
+            )
 
             return mu, mu_prime
 
 
+    def KStability(self):
+
+        """
+        Calculate the Rollett stability factor K for a standard 2-port network.
+
+        For a 2-port network, the classical definition is:
+
+        .. math::
+            \\Delta = S_{11}S_{22} - S_{12}S_{21}
+
+        .. math::
+            K =
+            \\frac{
+                1 - |S_{11}|^2 - |S_{22}|^2 + |\\Delta|^2
+            }{
+                2|S_{12}S_{21}|
+            }
+
+        .. math::
+            B_1 = 1 + |S_{11}|^2 - |S_{22}|^2 - |\\Delta|^2
+
+        Unconditional stability requires:
+
+        .. math::
+            K > 1
+
+        and
+
+        .. math::
+            |\\Delta| < 1
+
+        Returns
+        -------
+        tuple of numpy.ndarray
+            (K, Delta_abs, B1) stability factor, absolute value of Delta,
+            and B1 over frequency.
+        """
+
+        # ==========================================================
+        # S-parameters
+        # ==========================================================
+
+        S11 = self.S11_re + 1j * self.S11_im
+        S12 = self.S12_re + 1j * self.S12_im
+        S21 = self.S21_re + 1j * self.S21_im
+        S22 = self.S22_re + 1j * self.S22_im
+
+        # ==========================================================
+        # Determinant of the S-parameter matrix
+        # ==========================================================
+
+        Delta = S11 * S22 - S12 * S21
+
+        # ==========================================================
+        # Rollett Stability Factor K
+        # ==========================================================
+
+        K = ( (1 - np.abs(S11)**2 - np.abs(S22)**2 + np.abs(Delta)**2) / (2 * np.abs(S12 * S21)) )
+
+        # ==========================================================
+        # Absolute value of Delta
+        # ==========================================================
+
+        Delta_abs = np.abs(Delta)
+
+        # ==========================================================
+        # B1 stability factor
+        # ==========================================================
+
+        B1 = ( 1 + np.abs(S11)**2 - np.abs(S22)**2 - np.abs(Delta)**2 )
+
+
+        return K, Delta_abs, B1
 
 
 ###################################################################
@@ -979,58 +1126,46 @@ class AnalysisTools:
 
 
     
-    def ExtractFundamental(self, Signal, sim_frequency):
+    def ExtractFundamental(self, Signal, sim_frequency, R=100):
         """
-        Extract the fundamental frequency component from an FFT spectrum.
-
-        This function identifies the FFT bin closest to the expected fundamental
-        frequency and returns its magnitude in dB.
-
-        The spectrum is first computed using `CalcFFT`, and then the nearest
-        frequency bin is selected.
-
-        Parameters
-        ----------
-        Signal : pandas.DataFrame
-            Time-domain signal data (see `CalcFFT` for format requirements).
-
-        sim_frequency : float
-            Expected fundamental frequency (Hz).
+        Extract the fundamental frequency component from an FFT spectrum
+        and calculate the corresponding power in dBm.
 
         Returns
         -------
-        float
+        Y_local : float
             Magnitude of the fundamental frequency component in dB.
 
-        Notes
-        -----
-        - The function does NOT perform true quadratic interpolation.
-        - The value is taken from the closest FFT bin only.
-        - A small offset (1e-12) is added to avoid log(0).
-
-        Examples
-        --------
-        >>> P_fund = obj.ExtractFundamental(df, 1e9)
-        >>> print(P_fund)
-        -12.3
+        P_dBm : float
+            Fundamental power in dBm.
         """
+
         # Get FFT
         data = self.CalcFFT(Signal, sim_frequency)
         freq_array = data["freq"]
         Y_array = data["Y"]
 
-        # Step 1: find the index of the bin closest to the fundamental frequency
+        # Find the FFT bin closest to the fundamental frequency
         idx = np.argmin(np.abs(freq_array - sim_frequency))
 
-        # Step 2: select 3 bins: center and neighbors
+        # Select 3 bins: center and neighbors
         idx_min = max(0, idx - 1)
-        idx_max = min(len(Y_array), idx + 2)  # Python slicing excludes last index
-        # Y_local = Y_array[idx_min:idx_max]
-        Y_local = 20*np.log10(Y_array[idx] + 1e-12)
-        freq_local = freq_array[idx_min:idx_max]
+        idx_max = min(len(Y_array), idx + 2)
 
+        # Keep your existing voltage calculation
+        Y_local = 20 * np.log10(Y_array[idx] + 1e-12)
 
-        return Y_local
+        # Calculate power from the fundamental voltage
+        V_peak = Y_array[idx]
+        V_rms = V_peak / np.sqrt(2)
+
+        P_watt = V_rms**2 / R
+
+        # Convert power to dBm
+        P_dBm = 10 * np.log10(P_watt / 1e-3)
+
+        return Y_local, P_dBm
+
     
     def ExtractThirdFundamental(self, Signal, sim_frequency):
         """
@@ -1162,7 +1297,7 @@ class AnalysisTools:
 
 
 
-    def Compression_Point(self, files, sim_frequency):
+    def Compression_Point(self, files, sim_frequency, R=[100,100]):
         """
         Estimate the 1 dB compression point from power sweep measurements.
 
@@ -1182,6 +1317,10 @@ class AnalysisTools:
 
         sim_frequency : float
             Fundamental frequency of the signal (Hz), used for FFT extraction.
+
+        R : array
+            defoult R = [100, 100], this means 50 Ohm input and 50 Ohm Output
+            
 
         Returns
         -------
@@ -1221,11 +1360,21 @@ class AnalysisTools:
 
 
         PIn, POut = [], []
-
+        R1 = R[0]
+        R2 = R[1]
         for file in files:
             Sig = pd.read_csv(file, sep=",")
-            PIn.append(self.ExtractFundamental(Sig.iloc[:, :2], sim_frequency))
-            POut.append(self.ExtractFundamental(Sig.iloc[:, 2:4], sim_frequency))
+            # PIn.append(self.ExtractFundamental(Sig.iloc[:, :2], sim_frequency))
+            # POut.append(self.ExtractFundamental(Sig.iloc[:, 2:4], sim_frequency))
+
+            Y_in, P_in = self.ExtractFundamental(Sig.iloc[:, :2],sim_frequency, R1)
+            # Extract output fundamental voltage and power
+            Y_out, P_out = self.ExtractFundamental(Sig.iloc[:, 2:4],sim_frequency, R2)
+
+            # Store power values for compression calculation
+            PIn.append(P_in)
+            POut.append(P_out)
+
 
         # Convert to NumPy arrays for vector operations
         PIn = np.array(PIn)
@@ -1260,6 +1409,595 @@ class AnalysisTools:
 
         return _data
 
+
+
+    def CalcIIP3( self,files,f1,f2,R=[100, 100],im3='low',n_fit=5,force_ideal_slopes=False,start_idx=1):
+        """
+        Calculate IIP3 from a two-tone transient/IMD sweep.
+        """
+
+        # =========================================================
+        # Check inputs
+        # =========================================================
+
+        if im3 not in ('low', 'high'):
+            raise ValueError( "im3 must be either 'low' or 'high'.")
+
+        if f2 <= f1:
+            raise ValueError(  "f2 must be greater than f1.")
+
+        if len(files) < 2:
+            raise ValueError( "At least two sweep points are required." )
+
+        if n_fit < 2:
+            raise ValueError( "n_fit must be at least 2." )
+
+        if start_idx < 0:
+            raise ValueError( "start_idx must be >= 0." )
+
+        # =========================================================
+        # Select IM3 frequency
+        # =========================================================
+
+        if im3 == 'low':
+            f_im3 = 2.0 * f1 - f2
+
+        else:
+            f_im3 = 2.0 * f2 - f1
+
+        # =========================================================
+        # Storage
+        # =========================================================
+
+        R1, R2 = R
+        PIn = []
+        Pfund = []
+        PIM3 = []
+
+        # =========================================================
+        # Process every CSV
+        # =========================================================
+
+        for file in files:
+
+            Sig = pd.read_csv( file, sep="," )
+
+            if Sig.shape[1] < 4:
+                raise ValueError(  f"File '{file}' must contain at least 4 columns." )
+
+            # -----------------------------------------------------
+            # Differential input
+            # -----------------------------------------------------
+
+            _, P_in = self.ExtractFundamental( Sig.iloc[:, :2], f1, R1 )
+
+            # -----------------------------------------------------
+            # Differential output fundamental
+            # -----------------------------------------------------
+
+            _, P_fund = self.ExtractFundamental( Sig.iloc[:, 2:4], f1, R2 )
+
+            # -----------------------------------------------------
+            # Differential output IM3
+            # -----------------------------------------------------
+
+            _, P_im3 = self.ExtractFundamental( Sig.iloc[:, 2:4], f_im3, R2 )
+
+            PIn.append(P_in)
+            Pfund.append(P_fund)
+            PIM3.append(P_im3)
+
+        # =========================================================
+        # Convert to numpy arrays
+        # =========================================================
+
+        PIn = np.asarray( PIn, dtype=float )
+        Pfund = np.asarray( Pfund, dtype=float )
+        PIM3 = np.asarray( PIM3, dtype=float )
+
+        # =========================================================
+        # Sort according to input power
+        # =========================================================
+
+        sort_idx = np.argsort(PIn)
+
+        PIn = PIn[sort_idx]
+        Pfund = Pfund[sort_idx]
+        PIM3 = PIM3[sort_idx]
+
+        # =========================================================
+        # Remove unwanted low-power points
+        # =========================================================
+
+        if start_idx >= len(PIn):
+            raise ValueError( "start_idx removes all available data points.")
+
+        PIn = PIn[start_idx:]
+        Pfund = Pfund[start_idx:]
+        PIM3 = PIM3[start_idx:]
+
+        # =========================================================
+        # Determine number of fitting points
+        # =========================================================
+
+        n_fit = min( n_fit, len(PIn) )
+
+        if n_fit < 2:
+            raise ValueError( "Not enough points available for linear fitting." )
+
+        # =========================================================
+        # Small-signal fitting
+        # =========================================================
+
+        if force_ideal_slopes:
+
+            # -----------------------------------------------------
+            # Fundamental = 1 dB/dB
+            # -----------------------------------------------------
+
+            b_fund = np.mean( Pfund[:n_fit] - PIn[:n_fit] )
+            fit_fund = np.array([ 1.0, b_fund ])
+
+            # -----------------------------------------------------
+            # IM3 = 3 dB/dB
+            # -----------------------------------------------------
+
+            b_im3 = np.mean( PIM3[:n_fit] - 3.0 * PIn[:n_fit] )
+            fit_im3 = np.array([ 3.0, b_im3 ])
+        else:
+
+            # -----------------------------------------------------
+            # Actual measured slopes
+            # -----------------------------------------------------
+
+            fit_fund = np.polyfit( PIn[:n_fit], Pfund[:n_fit], 1 )
+            fit_im3 = np.polyfit( PIn[:n_fit], PIM3[:n_fit], 1 )
+        # =========================================================
+        # Extract slopes
+        # =========================================================
+
+        fundamental_slope = fit_fund[0]
+        im3_slope = fit_im3[0]
+
+        # =========================================================
+        # Extrapolated lines
+        # =========================================================
+
+        Pfund_line = np.polyval( fit_fund, PIn )
+        PIM3_line = np.polyval( fit_im3, PIn )
+
+        # =========================================================
+        # Calculate IIP3
+        # =========================================================
+
+        denom = ( fit_fund[0] - fit_im3[0] )
+        if np.isclose( denom, 0.0 ):
+            IIP3 = None
+            OIP3 = None
+        else:
+
+            IIP3 = ( fit_im3[1] - fit_fund[1] ) / denom
+            OIP3 = np.polyval( fit_fund, IIP3 )
+
+        # =========================================================
+        # Return everything
+        # =========================================================
+
+        return {
+            "Pin": PIn,
+            "Pfund": Pfund,
+            "PIM3": PIM3,
+            "Pfund_line": Pfund_line,
+            "PIM3_line": PIM3_line,
+            "IIP3": IIP3,
+            "OIP3": OIP3,
+            "f1": f1,
+            "f2": f2,
+            "f_im3": f_im3,
+            "fundamental_slope": fundamental_slope,
+            "im3_slope": im3_slope,
+            "n_fit": n_fit,
+            "im3_type": im3,
+        }
+
+
+
+    def PlotIIP3(self,files,f1, f2,R=[100, 100], im3='low', n_fit=5,force_ideal_slopes=False,start_idx=1,figsize=(9, 6),title="IIP3 Analysis"):
+        """
+        Calculate and plot IIP3 from a two-tone transient/IMD sweep.
+        """
+
+        # =========================================================
+        # Calculate IIP3
+        # =========================================================
+
+        result = self.CalcIIP3( files=files, f1=f1, f2=f2, R=R, im3=im3, n_fit=n_fit, force_ideal_slopes=force_ideal_slopes, start_idx=start_idx )
+
+        # =========================================================
+        # Extract results
+        # =========================================================
+
+        Pin = result["Pin"]
+        Pfund = result["Pfund"]
+        PIM3 = result["PIM3"]
+
+        Pfund_line = result["Pfund_line"]
+        PIM3_line = result["PIM3_line"]
+
+        IIP3 = result["IIP3"]
+        OIP3 = result["OIP3"]
+
+        fundamental_slope = result["fundamental_slope"]
+        im3_slope = result["im3_slope"]
+
+        # =========================================================
+        # Create figure
+        # =========================================================
+
+        fig, ax = plt.subplots( figsize=figsize )
+
+        # =========================================================
+        # Measured data
+        # =========================================================
+
+        ax.plot( Pin, Pfund, 'o', label="Fundamental", markersize=6 )
+        ax.plot( Pin, PIM3, 's', label=f"IM3 ({im3})", markersize=6 )
+
+        # =========================================================
+        # Fitted lines
+        # =========================================================
+
+        ax.plot( Pin, Pfund_line, '--', label=( f"Fundamental fit " f"({fundamental_slope:.2f} dB/dB)" ) )
+        ax.plot( Pin, PIM3_line, '--', label=( f"IM3 fit " f"({im3_slope:.2f} dB/dB)" ) )
+
+        # =========================================================
+        # Mark IIP3
+        # =========================================================
+
+        if IIP3 is not None and np.isfinite(IIP3):
+            Pout_IIP3 = np.polyval(
+                np.array([ fundamental_slope, result["Pfund_line"][0] - fundamental_slope * Pin[0]]), IIP3 )
+            ax.plot( IIP3, Pout_IIP3, 'x', markersize=12, markeredgewidth=2, label=f"IIP3 = {IIP3:.2f} dBm" )
+            ax.axvline(IIP3, linestyle=':', alpha=0.7)
+            ax.axhline( OIP3, linestyle=':',alpha=0.7 )
+            ax.annotate( f"IIP3 = {IIP3:.2f} dBm\n" f"OIP3 = {OIP3:.2f} dBm", xy=(IIP3, OIP3), xytext=(10, -40), textcoords="offset points", arrowprops=dict( arrowstyle="->" ), fontsize=10 )
+
+        # =========================================================
+        # Labels
+        # =========================================================
+
+        ax.set_xlabel( "Input Power at f₁ [dBm]" )
+        ax.set_ylabel(  "Output Power [dBm]" )
+        ax.set_title(  title )
+        ax.grid(  True,  which="both", linestyle=":", alpha=0.6 )
+        ax.legend()
+
+        # =========================================================
+        # Print results
+        # =========================================================
+
+        print("\n" + "=" * 60)
+        print("IIP3 ANALYSIS")
+        print("=" * 60)
+
+        print(
+            f"f1               = "
+            f"{f1 / 1e9:.6f} GHz"
+        )
+        print(
+            f"f2               = "
+            f"{f2 / 1e9:.6f} GHz"
+        )
+        print(
+            f"IM3 frequency    = "
+            f"{result['f_im3'] / 1e9:.6f} GHz"
+        )
+
+        print("-" * 60)
+        print(
+            f"Fundamental slope = "
+            f"{fundamental_slope:.3f} dB/dB"
+        )
+        print(
+            f"IM3 slope         = "
+            f"{im3_slope:.3f} dB/dB"
+        )
+        print("-" * 60)
+        if IIP3 is not None:
+            print(
+                f"IIP3              = "
+                f"{IIP3:.3f} dBm"
+            )
+
+        if OIP3 is not None:
+            print(
+                f"OIP3              = "
+                f"{OIP3:.3f} dBm"
+            )
+        print("=" * 60)
+        plt.tight_layout()
+        return result, fig
+            
+
+
+
+
+    def PlotIIP3_HB( self, file, n_fit=5, cadence_IIP3=None, cadence_OIP3=12.10, figsize=(9, 6)):
+
+        # ============================================================
+        # Read Cadence HB CSV
+        # ============================================================
+
+        data = pd.read_csv( file, sep="," )
+        if data.shape[1] < 4:
+            raise ValueError(  "CSV file must contain at least 4 columns." )
+
+        # ============================================================
+        # Extract data
+        #
+        # Column 0: 3rd Order X = Pin
+        # Column 1: 3rd Order Y = Pout IM3
+        # Column 2: 1st Order X = Pin
+        # Column 3: 1st Order Y = Pout Fundamental
+        # ============================================================
+
+        Pin_IM3 = data.iloc[:, 0].to_numpy( dtype=float )
+        PIM3 = data.iloc[:, 1].to_numpy( dtype=float )
+        Pin_Fund = data.iloc[:, 2].to_numpy( dtype=float )
+        Pfund = data.iloc[:, 3].to_numpy( dtype=float )
+
+        # ============================================================
+        # Remove invalid values
+        # ============================================================
+
+        valid_IM3 = ( np.isfinite(Pin_IM3) & np.isfinite(PIM3) )
+        valid_Fund = ( np.isfinite(Pin_Fund) & np.isfinite(Pfund) )
+        Pin_IM3 = Pin_IM3[valid_IM3]
+        PIM3 = PIM3[valid_IM3]
+        Pin_Fund = Pin_Fund[valid_Fund]
+        Pfund = Pfund[valid_Fund]
+
+        # ============================================================
+        # Sort by input power
+        # ============================================================
+
+        idx_IM3 = np.argsort( Pin_IM3 )
+        idx_Fund = np.argsort( Pin_Fund )
+        Pin_IM3 = Pin_IM3[idx_IM3]
+        PIM3 = PIM3[idx_IM3]
+        Pin_Fund = Pin_Fund[idx_Fund]
+        Pfund = Pfund[idx_Fund]
+
+        # ============================================================
+        # Number of points used for linear fit
+        # ============================================================
+
+        n_fit = min( n_fit, len(Pin_Fund), len(Pin_IM3) )
+        if n_fit < 2:
+            raise ValueError( "Not enough data points for fitting." )
+
+        # ============================================================
+        # Linear fits
+        #
+        # Fundamental:
+        #
+        #     Pout = a1 * Pin + b1
+        #
+        # IM3:
+        #
+        #     Pout = a3 * Pin + b3
+        # ============================================================
+
+        fit_fund = np.polyfit( Pin_Fund[:n_fit], Pfund[:n_fit], 1 )
+        fit_im3 = np.polyfit( Pin_IM3[:n_fit], PIM3[:n_fit], 1 )
+        a1 = fit_fund[0]
+        b1 = fit_fund[1]
+        a3 = fit_im3[0]
+        b3 = fit_im3[1]
+
+        # ============================================================
+        # Calculate Python IIP3
+        #
+        # a1*Pin + b1 = a3*Pin + b3
+        #
+        # IIP3 = (b3 - b1) / (a1 - a3)
+        # ============================================================
+
+        denominator = ( a1 - a3 )
+        if np.isclose( denominator,  0.0 ):
+            IIP3 = None
+            OIP3 = None
+
+        else:
+            IIP3 = ( b3 - b1 ) / denominator
+            OIP3 = ( a1 * IIP3 + b1 )
+
+        # ============================================================
+        # Cadence IIP3 / OIP3
+        #
+        # These are independent values.
+        #
+        # Cadence OIP3 is NOT calculated from the Python fit.
+        # ============================================================
+
+        cadence_IIP3_valid = ( cadence_IIP3 is not None and np.isfinite(cadence_IIP3) )
+        cadence_OIP3_valid = ( cadence_OIP3 is not None and np.isfinite(cadence_OIP3) )
+
+        # ============================================================
+        # Generate extrapolation lines
+        # ============================================================
+
+        Pin_min = min( Pin_Fund.min(), Pin_IM3.min() )
+        Pin_max = max( Pin_Fund.max(), Pin_IM3.max()  )
+        # Extend plot to include Python IIP3
+        if ( IIP3 is not None and np.isfinite(IIP3) ):
+            Pin_max = max( Pin_max, IIP3 )
+
+        # Extend plot to include Cadence IIP3
+        # only if an independent Cadence IIP3 was provided.
+
+        if cadence_IIP3_valid: Pin_max = max( Pin_max, cadence_IIP3 )
+        Pin_fit = np.linspace( Pin_min, Pin_max, 500 )
+        Pfund_fit = ( a1 * Pin_fit + b1 )
+        PIM3_fit = ( a3 * Pin_fit + b3 )
+
+        # ============================================================
+        # Plot
+        # ============================================================
+
+        fig, ax = plt.subplots( figsize=figsize )
+
+        # ============================================================
+        # Measured fundamental
+        # ============================================================
+
+        ax.plot( Pin_Fund, Pfund, 'o', markersize=6, label="Fundamental" )
+
+        # ============================================================
+        # Measured IM3
+        # ============================================================
+
+        ax.plot( Pin_IM3,  PIM3, 's', markersize=6, label="3rd Order" )
+
+        # ============================================================
+        # Fundamental fit
+        #
+        # No legend entry
+        # ============================================================
+
+        ax.plot( Pin_fit,  Pfund_fit, '--' )
+
+        # ============================================================
+        # IM3 fit
+        #
+        # No legend entry
+        # ============================================================
+
+        ax.plot( Pin_fit, PIM3_fit, '--' )
+
+        # ============================================================
+        # Mark Python IIP3 / OIP3
+        # ============================================================
+
+        if (  IIP3 is not None and np.isfinite(IIP3)  and OIP3 is not None and np.isfinite(OIP3) ):
+            ax.plot( IIP3, OIP3, 'x', markersize=14, markeredgewidth=3, label=( f"Python IIP3 = " f"{IIP3:.2f} dBm") )
+            # Vertical Python IIP3 line
+            ax.axvline( IIP3, linestyle=':', alpha=0.7 )
+            # Horizontal Python OIP3 line
+            ax.axhline(  OIP3, linestyle=':', alpha=0.7 )
+
+            # Python annotation
+            ax.annotate( f"Python IIP3 = " f"{IIP3:.2f} dBm\n" f"Python OIP3 = " f"{OIP3:.2f} dBm", xy=( IIP3,OIP3),xytext=( 15, 15 ),textcoords="offset points",arrowprops=dict(arrowstyle="->" ),fontsize=10 )
+
+        # ============================================================
+        # Mark Cadence OIP3
+        #
+        # OIP3 is independently entered from Cadence.
+        #
+        # Since Cadence OIP3 is an output-referred quantity,
+        # it is plotted on the output-power axis.
+        #
+        # If Cadence IIP3 is not available, only the horizontal
+        # OIP3 line and annotation are shown.
+        # ============================================================
+
+        if cadence_OIP3_valid:
+
+            # Horizontal Cadence OIP3 line
+
+            ax.axhline(cadence_OIP3,linestyle='-.',alpha=0.6 )
+
+            # If Cadence IIP3 is also available,
+            # mark the complete Cadence intercept point.
+
+            if cadence_IIP3_valid:
+                ax.plot( cadence_IIP3, cadence_OIP3,'D', markersize=9, markeredgewidth=2, label=( f"Cadence OIP3 = " f"{cadence_OIP3:.2f} dBm"))
+
+                # Vertical Cadence IIP3 line
+                ax.axvline(cadence_IIP3, linestyle='-.', alpha=0.6)
+
+                # Cadence annotation
+                ax.annotate( f"Cadence IIP3 = " f"{cadence_IIP3:.2f} dBm\n"  f"Cadence OIP3 = "  f"{cadence_OIP3:.2f} dBm", xy=( cadence_IIP3, cadence_OIP3 ), xytext=( 15, -45  ),  textcoords="offset points", arrowprops={ "arrowstyle": "->" }, fontsize=10 )
+
+            else:
+                # Cadence OIP3 only
+                ax.plot( [], [],'D', markersize=9,  markeredgewidth=2, label=( f"Cadence OIP3 = "  f"{cadence_OIP3:.2f} dBm" )  )
+
+                # OIP3 annotation
+                ax.annotate( f"Cadence OIP3 = "  f"{cadence_OIP3:.2f} dBm",  xy=( Pin_max, cadence_OIP3 ),  xytext=( -150, -35),textcoords="offset points", arrowprops={"arrowstyle": "->"}, fontsize=10 )
+
+        # ============================================================
+        # Axis labels
+        # ============================================================
+
+        ax.set_xlabel( "Input Power [dBm]")
+        ax.set_ylabel("Output Power [dBm]" )
+        ax.grid( True, linestyle=":", alpha=0.6 )
+        ax.legend()
+        plt.tight_layout()
+
+        # ============================================================
+        # Print results
+        # ============================================================
+
+        print("\n" + "=" * 60)
+        print("IIP3 ANALYSIS - CADENCE HARMONIC BALANCE")
+        print("=" * 60)
+        print( f"Number of fit points = " f"{n_fit}" )
+        print( f"Fundamental slope = " f"{a1:.3f} dB/dB" )
+        print( f"IM3 slope         = " f"{a3:.3f} dB/dB" )
+        print("-" * 60)
+
+        # ============================================================
+        # Python results
+        # ============================================================
+
+        if ( IIP3 is not None and np.isfinite(IIP3) ):
+            print( f"Python IIP3       = "f"{IIP3:.3f} dBm" )
+            print( f"Python OIP3       = " f"{OIP3:.3f} dBm" )
+        else:
+            print( "Python IIP3 could not be calculated." )
+        print("-" * 60)
+
+        # ============================================================
+        # Cadence results
+        # ============================================================
+
+        if cadence_IIP3_valid:
+            print(f"Cadence IIP3      = " f"{cadence_IIP3:.3f} dBm" )
+        else:
+            print( "Cadence IIP3      = not provided" )
+        if cadence_OIP3_valid:
+            print(f"Cadence OIP3      = " f"{cadence_OIP3:.3f} dBm" )
+        else:
+            print( "Cadence OIP3      = not provided" )
+        print("=" * 60)
+
+        # ============================================================
+        # Return
+        # ============================================================
+
+        return {
+            "Pin_Fund": Pin_Fund,
+            "Pfund": Pfund,
+
+            "Pin_IM3": Pin_IM3,
+            "PIM3": PIM3,
+
+            "fundamental_slope": a1,
+            "im3_slope": a3,
+
+            "IIP3": IIP3,
+            "OIP3": OIP3,
+
+            "cadence_IIP3": cadence_IIP3,
+            "cadence_OIP3": cadence_OIP3,
+
+            "fig": fig
+        }
+
+
+    
 
 
 
@@ -1585,6 +2323,147 @@ class AnalysisTools:
         
 
 
+    # def Eyediagramm(self, Sig, sim_frequency, fs=None, phase_shift1=0.0, phase_shift2=0.0):
+        
+    #     """
+    #     Generate eye diagram data from time-domain signals.
+
+    #     This function prepares data for eye diagram visualization by interpolating
+    #     the signal onto a uniform time grid and slicing it into periodic segments
+    #     based on the fundamental frequency.
+
+    #     The eye diagram is constructed by overlapping multiple symbol periods.
+
+    #     Parameters
+    #     ----------
+    #     Sig : pandas.DataFrame
+    #         Input signal data:
+    #         - 2 columns: [time, signal] (single signal)
+    #         - 4 columns: [time1, signal1, time2, signal2] (dual signal case)
+
+    #     sim_frequency : float
+    #         Fundamental frequency of the signal (Hz), used to estimate symbol period.
+
+    #     fs : float, optional
+    #         Sampling frequency used for uniform resampling. If None, it is estimated
+    #         from the input time vector.
+
+    #     phase_shift1 : float, optional
+    #         Fractional UI shift applied to eye diagram of signal 1.
+    #         Used to horizontally shift the eye opening (0 to 1 corresponds to one symbol period).
+
+    #     phase_shift2 : float, optional
+    #         Fractional UI shift applied to eye diagram of signal 2 (if present).
+
+    #     Returns
+    #     -------
+    #     dict
+    #         For single signal (2 columns):
+    #             - "time" : time vector for eye plot
+    #             - "cuts" : eye diagram matrix (each row = one UI)
+    #             - "Signal" : index vector for slicing
+
+    #         For dual signal (4 columns):
+    #             - "time" : time vector
+    #             - "cuts_sig1" : eye data for signal 1
+    #             - "Signal1" : index vector for signal 1
+    #             - "cuts_sig2" : eye data for signal 2
+    #             - "Signal2" : index vector for signal 2
+
+    #     Notes
+    #     -----
+    #     - Signal is interpolated using quadratic interpolation.
+    #     - Time grid is constructed on a uniform sampling basis.
+    #     - Eye diagram is formed by reshaping into symbol-length segments.
+    #     - Phase shifting is performed in the time domain (not via np.roll).
+    #     - Accuracy depends on sampling resolution and interpolation quality.
+
+    #     Examples
+    #     --------
+    #     >>> eye = obj.Eyediagramm(df, 1e9)
+    #     >>> eye["cuts"]
+    #     array([...])
+    #     """
+
+    #     import numpy as np
+    #     from scipy.interpolate import interp1d
+
+    #     Ts = 1 / sim_frequency  # symbol period
+
+    #     # ---------------------------
+    #     # SINGLE SIGNAL
+    #     # ---------------------------
+    #     if Sig.shape[1] == 2:
+
+    #         time = Sig.iloc[:, 0].to_numpy()
+    #         signal = Sig.iloc[:, 1].to_numpy()
+
+    #         if fs is None:
+    #             fs = 1 / np.median(np.diff(time))
+
+    #         # uniform time grid
+    #         t_uniform = np.arange(time[0], time[-1], 1/fs)
+
+    #         f = interp1d(time, signal, kind='quadratic', fill_value="extrapolate")
+
+    #         # phase shift in time domain (replaces np.roll)
+    #         t_shifted = t_uniform + phase_shift1 * Ts
+    #         sig = f(t_shifted)
+
+    #         N = int(round(Ts * fs))
+
+    #         sig = sig[:len(sig) - (len(sig) % N)]
+    #         eye = sig.reshape((-1, N))
+
+    #         eye_time = np.linspace(0, Ts, N)
+
+    #         return {
+    #             "time": eye_time,
+    #             "cuts": eye,
+    #             "Signal": np.arange(eye.shape[0])
+    #         }
+
+    #     # ---------------------------
+    #     # DUAL SIGNAL
+    #     # ---------------------------
+    #     elif Sig.shape[1] >= 4:
+
+    #         time1 = Sig.iloc[:, 0].to_numpy()
+    #         signal1 = Sig.iloc[:, 1].to_numpy()
+    #         time2 = Sig.iloc[:, 2].to_numpy()
+    #         signal2 = Sig.iloc[:, 3].to_numpy()
+
+    #         if fs is None:
+    #             fs = 1 / np.median(np.diff(time1))
+
+    #         t1_uniform = np.arange(time1[0], time1[-1], 1/fs)
+    #         t2_uniform = np.arange(time2[0], time2[-1], 1/fs)
+
+    #         f1 = interp1d(time1, signal1, kind='quadratic', fill_value="extrapolate")
+    #         f2 = interp1d(time2, signal2, kind='quadratic', fill_value="extrapolate")
+
+    #         sig1 = f1(t1_uniform + phase_shift1 * Ts)
+    #         sig2 = f2(t2_uniform + phase_shift2 * Ts)
+
+    #         N = int(round(Ts * fs))
+
+    #         sig1 = sig1[:len(sig1) - (len(sig1) % N)]
+    #         sig2 = sig2[:len(sig2) - (len(sig2) % N)]
+
+    #         eye1 = sig1.reshape((-1, N))
+    #         eye2 = sig2.reshape((-1, N))
+
+    #         eye_time = np.linspace(0, Ts, N)
+
+    #         return {
+    #             "time": eye_time,
+    #             "cuts_sig1": eye1,
+    #             "Signal1": np.arange(eye1.shape[0]),
+    #             "cuts_sig2": eye2,
+    #             "Signal2": np.arange(eye2.shape[0])
+    #         }
+
+
 
     def extract_csv_data(self, file_path):
         """
@@ -1625,9 +2504,656 @@ class AnalysisTools:
 
         Sig = pd.read_csv(file_path, sep=",")
 
-        data_vec = {
-            f"col{i}": Sig.iloc[:, i].to_numpy()
-            for i in range(Sig.shape[1])
-        }
+        data_vec = { f"col{i}": Sig.iloc[:, i].to_numpy() for i in range(Sig.shape[1])}
 
         return data_vec    
+
+
+    def HBT_DC_Table_old(self, file_path, transistor_area):
+        """
+        Create an HBT DC operating-point table from a CSV file.
+
+        Transistors that are not present in transistor_area are ignored.
+
+        JC is calculated in mA/um²:
+
+            JC = IC [mA] / Area [um²]
+        """
+
+        # =========================================================
+        # Read CSV
+        # =========================================================
+
+        df = pd.read_csv( file_path, skipinitialspace=True)
+
+        # Clean column names
+        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.lstrip("#").str.strip()
+
+        # Replace INF values with NaN
+        df = df.replace( [np.inf, -np.inf], np.nan )
+
+        # =========================================================
+        # Select required columns
+        # =========================================================
+
+        table = df[ [  "instance","temp [C]", "ic [A]", "vcei [V]","region"] ].copy()
+
+        # =========================================================
+        # Extract transistor name
+        # =========================================================
+        #
+        # Supported formats:
+        #
+        # I133.Q5'_VGA.npn_hic_G3
+        #       -> Q5'_VGA
+        #
+        # I135.Q2'_Buffer.npn_hic_G3
+        #       -> Q2'_Buffer
+        #
+        # /I133/Q4_VGA/npn_hic_G3
+        #       -> Q4_VGA
+        #
+        # I15.Q3_Driver.npn_hic_G3
+        #       -> Q3_Driver
+        #
+        # =========================================================
+
+        def extract_transistor_name(instance):
+
+            name = str(instance).strip()
+
+            # -----------------------------------------------------
+            # Dot-separated format
+            # I133.Q5'_VGA.npn_hic_G3
+            # -----------------------------------------------------
+
+            if "." in name:
+
+                parts = name.split(".")
+
+                if len(parts) >= 2:
+                    name = parts[1]
+
+            # -----------------------------------------------------
+            # Slash-separated format
+            # /I133/Q4_VGA/npn_hic_G3
+            # -----------------------------------------------------
+
+            elif "/" in name:
+                parts = [ part for part in name.split("/")if part != "" ]
+
+                if len(parts) >= 2:
+                    name = parts[-2]
+
+            # -----------------------------------------------------
+            # Remove model suffix if necessary
+            # -----------------------------------------------------
+
+            if name.endswith("npn_hic_G3"):
+                name = name.replace( "npn_hic_G3", "").rstrip(".")
+
+            # -----------------------------------------------------
+            # Convert escaped apostrophe
+            #
+            # Q5\'_VGA -> Q5'_VGA
+            # -----------------------------------------------------
+
+            name = name.replace( "\\'", "'")
+            return name.strip()
+
+        # Extract transistor names
+        table["Transistor"] = table["instance"].apply(extract_transistor_name)
+
+        # =========================================================
+        # Ignore transistors that are not in transistor_area
+        # =========================================================
+
+        table = table[ table["Transistor"].isin(transistor_area.keys() )].copy()
+
+        # Reset index after filtering
+        table.reset_index( drop=True, inplace=True)
+
+        # =========================================================
+        # Add emitter area
+        # =========================================================
+
+        table["Area [um²]"] = table["Transistor"].map( transistor_area )
+
+        # =========================================================
+        # Convert collector current
+        #
+        # A -> mA
+        # =========================================================
+
+        table["ic [mA]"] = (table["ic [A]"] * 1e3 )
+
+        # =========================================================
+        # Calculate collector current density
+        #
+        # JC = IC / Area
+        #
+        # IC   -> mA
+        # Area -> um²
+        # JC   -> mA/um²
+        # =========================================================
+
+        table["JC [mA/um²]"] = ( table["ic [mA]"] /table["Area [um²]"])
+
+        # =========================================================
+        # Rename columns
+        # =========================================================
+
+        table = table.rename(
+            columns={
+                "instance": "Instance",
+                "temp [C]": "Temp. [°C]",
+                "ic [mA]": "IC [mA]",
+                "vcei [V]": "VCE [V]",
+                "region": "Region"
+            }
+        )
+
+        # =========================================================
+        # Final column order
+        # =========================================================
+
+        table = table[
+            [
+                "Instance",
+                "Transistor",
+                "Temp. [°C]",
+                "IC [mA]",
+                "Area [um²]",
+                "JC [mA/um²]",
+                "VCE [V]",
+                "Region"
+            ]
+        ]
+
+        # =========================================================
+        # Round values
+        # =========================================================
+
+        table["Temp. [°C]"] = (table["Temp. [°C]"].round(2) )
+        table["IC [mA]"] = (table["IC [mA]"].round(3) )
+        table["Area [um²]"] = (table["Area [um²]"].round(4))
+        table["JC [mA/um²]"] = ( table["JC [mA/um²]"].round(3) )
+        table["VCE [V]"] = ( table["VCE [V]"].round(3) )
+
+        # =========================================================
+        # Create Matplotlib table
+        # =========================================================
+
+        fig, ax = plt.subplots( figsize=(20, 3.5) )
+        ax.axis("off")
+
+        tbl = ax.table(
+            cellText=table.values,
+            colLabels=table.columns,
+            cellLoc="center",
+            loc="center",
+            colWidths=[
+                0.30,   # Instance
+                0.14,   # Transistor
+                0.10,   # Temperature
+                0.10,   # IC
+                0.11,   # Area
+                0.14,   # JC
+                0.10,   # VCE
+                0.15    # Region
+            ]
+        )
+
+        # =========================================================
+        # Table formatting
+        # =========================================================
+
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(12)
+        tbl.scale(  1, 2.0 )
+
+        # =========================================================
+        # Return
+        # =========================================================
+
+        return table, fig
+        
+
+
+
+    def HBT_DC_Table(self, file_path, transistor_area):
+        """
+        Create an HBT DC operating-point table from old or new CSV data.
+
+        Supported CSV formats:
+
+        OLD:
+            instance, temp [C], ..., ic [A], ..., vcei [V], ..., region
+
+        NEW:
+            instance, trise [C], ..., vce [V], ..., temp [C], ..., ic [A], ..., region
+
+        Supported instance formats:
+
+            I97.Q4'_VGA.npn_hic_G3
+                -> Q4'_VGA
+
+            /I97/Q4_VGA/npn_hic_G3
+                -> Q4_VGA
+
+            /Q0
+                -> Q0
+
+        Transistors that are not present in transistor_area are ignored.
+
+        JC is calculated in mA/um²:
+
+            JC = IC [mA] / Area [um²]
+        """
+
+        # =========================================================
+        # Read CSV
+        # =========================================================
+
+        df = pd.read_csv( file_path, skipinitialspace=True)
+
+        # =========================================================
+        # Clean column names
+        # =========================================================
+
+        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.lstrip("#").str.strip()
+
+        # =========================================================
+        # Replace INF values with NaN
+        # =========================================================
+
+        df = df.replace( [np.inf, -np.inf],np.nan)
+
+        # =========================================================
+        # Determine VCE column
+        #
+        # Old:
+        #     vcei [V]
+        #
+        # New:
+        #     vce [V]
+        # =========================================================
+
+        if "vcei [V]" in df.columns:
+            vce_column = "vcei [V]"
+
+        elif "vce [V]" in df.columns:
+            vce_column = "vce [V]"
+
+        else:
+            raise ValueError("No VCE column found. ""Expected either 'vcei [V]' or 'vce [V]'.")
+
+        # =========================================================
+        # Check required columns
+        # =========================================================
+
+        required_columns = [
+            "instance",
+            "temp [C]",
+            "ic [A]",
+            vce_column,
+            "region"
+        ]
+
+        missing_columns = [column for column in required_columns if column not in df.columns]
+        if missing_columns:
+            raise ValueError( f"Missing required columns: {missing_columns}" )
+
+        # =========================================================
+        # Select required columns
+        # =========================================================
+
+        table = df[
+            [
+                "instance",
+                "temp [C]",
+                "ic [A]",
+                vce_column,
+                "region"
+            ]
+        ].copy()
+
+        # =========================================================
+        # Extract transistor name
+        # =========================================================
+
+        def extract_transistor_name(instance):
+
+            name = str(instance).strip()
+
+            # -----------------------------------------------------
+            # NEW FORMAT
+            #
+            # /Q0
+            # /Q1
+            # /Q2
+            #
+            # -----------------------------------------------------
+
+            if name.startswith("/"):
+
+                parts = [ part for part in name.split("/") if part != "" ]
+                # /Q0
+                if len(parts) == 1:
+                    name = parts[0]
+
+                # -------------------------------------------------
+                # OLD slash format
+                #
+                # /I97/Q4_VGA/npn_hic_G3
+                #
+                # -> Q4_VGA
+                # -------------------------------------------------
+
+                elif len(parts) >= 2:
+                    if parts[-1] == "npn_hic_G3":
+                        name = parts[-2]
+                    else:
+                        name = parts[-1]
+
+            # -----------------------------------------------------
+            # OLD dot format
+            #
+            # I97.Q4'_VGA.npn_hic_G3
+            #
+            # -> Q4'_VGA
+            # -----------------------------------------------------
+
+            elif "." in name:
+                parts = name.split(".")
+                if len(parts) >= 2:
+                    name = parts[1]
+
+            # -----------------------------------------------------
+            # Remove model suffix if necessary
+            # -----------------------------------------------------
+
+            if name.endswith("npn_hic_G3"):
+                name = name.replace( "npn_hic_G3", "" ).rstrip(".")
+
+            # -----------------------------------------------------
+            # Convert escaped apostrophe
+            #
+            # Q4\'_VGA -> Q4'_VGA
+            # -----------------------------------------------------
+
+            name = name.replace( "\\'", "'" )
+            return name.strip()
+
+        # =========================================================
+        # Extract transistor names
+        # =========================================================
+
+        table["Transistor"] = table["instance"].apply( extract_transistor_name )
+
+        # =========================================================
+        # Ignore transistors not in transistor_area
+        # =========================================================
+
+        table = table[ table["Transistor"].isin(  transistor_area.keys()  )  ].copy()
+
+        # =========================================================
+        # Check whether anything matched
+        # =========================================================
+
+        if table.empty:
+
+            raise ValueError(
+                "No matching transistors found.\n\n"
+                "Transistors extracted from CSV:\n"
+                f"{df['instance'].apply(extract_transistor_name).tolist()}\n\n"
+                "Transistors in transistor_area:\n"
+                f"{list(transistor_area.keys())}"
+            )
+
+        # =========================================================
+        # Reset index
+        # =========================================================
+
+        table.reset_index(  drop=True, inplace=True )
+
+        # =========================================================
+        # Add emitter area
+        # =========================================================
+
+        table["Area [um²]"] = table["Transistor"].map( transistor_area )
+
+        # =========================================================
+        # Convert collector current
+        #
+        # A -> mA
+        # =========================================================
+
+        table["ic [mA]"] = ( table["ic [A]"] * 1e3 )
+
+        # =========================================================
+        # Calculate collector current density
+        #
+        # JC = IC / Area
+        #
+        # IC   -> mA
+        # Area -> um²
+        # JC   -> mA/um²
+        # =========================================================
+
+        table["JC [mA/um²]"] = ( table["ic [mA]"] / table["Area [um²]"] )
+
+        # =========================================================
+        # Rename columns
+        # =========================================================
+
+        table = table.rename(
+            columns={
+                "instance": "Instance",
+                "temp [C]": "Temp. [°C]",
+                "ic [mA]": "IC [mA]",
+                vce_column: "VCE [V]",
+                "region": "Region"
+            }
+        )
+
+        # =========================================================
+        # Final column order
+        # =========================================================
+
+        table = table[
+            [
+                "Instance",
+                "Transistor",
+                "Temp. [°C]",
+                "IC [mA]",
+                "Area [um²]",
+                "JC [mA/um²]",
+                "VCE [V]",
+                "Region"
+            ]
+        ]
+
+        # =========================================================
+        # Round values
+        # =========================================================
+
+        table["Temp. [°C]"] = ( table["Temp. [°C]"].round(2) )
+        table["IC [mA]"] = ( table["IC [mA]"].round(3) )
+        table["Area [um²]"] = ( table["Area [um²]"].round(4) )
+        table["JC [mA/um²]"] = ( table["JC [mA/um²]"].round(3) )
+        table["VCE [V]"] = ( table["VCE [V]"].round(3) )
+
+        # =========================================================
+        # Create Matplotlib table
+        # =========================================================
+
+        fig, ax = plt.subplots(figsize=(20, 3.5) )
+        ax.axis("off")
+        tbl = ax.table(
+            cellText=table.values,
+            colLabels=table.columns,
+            cellLoc="center",
+            loc="center",
+            colWidths=[
+                0.30,   # Instance
+                0.14,   # Transistor
+                0.10,   # Temperature
+                0.10,   # IC
+                0.11,   # Area
+                0.14,   # JC
+                0.10,   # VCE
+                0.15    # Region
+            ]
+        )
+
+        # =========================================================
+        # Table formatting
+        # =========================================================
+
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(12)
+        tbl.scale(  1, 2.0 )
+
+        # =========================================================
+        # Return
+        # =========================================================
+
+        return table, fig
+
+
+
+    def Source_Table(self, file_path, instance_width=0.20):
+        """
+        Read a source operating-point CSV file and create a formatted table.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the source CSV file.
+
+        instance_width : float
+            Width of the Instance column in the matplotlib table.
+
+        Returns
+        -------
+        table : pandas.DataFrame
+            Processed source data including a Total row.
+
+        fig : matplotlib.figure.Figure
+            Matplotlib figure containing the table.
+
+        total_power_mW : float
+            Total absolute power of all sources in mW.
+        """
+
+        # ---------------------------------------------------------
+        # Read CSV
+        # ---------------------------------------------------------
+
+        df = pd.read_csv( file_path, skipinitialspace=True )
+
+        # ---------------------------------------------------------
+        # Clean column names
+        # ---------------------------------------------------------
+
+        df.columns = df.columns.str.strip()
+        df.columns = df.columns.str.lstrip("#").str.strip()
+
+        # ---------------------------------------------------------
+        # Convert INF values to NaN
+        # ---------------------------------------------------------
+
+        df = df.replace([np.inf, -np.inf], np.nan)
+
+        # ---------------------------------------------------------
+        # Select parameters
+        # ---------------------------------------------------------
+
+        table = df[ [ "instance",  "v [V]", "i [A]", "pwr [W]" ]  ].copy()
+
+        # ---------------------------------------------------------
+        # Convert units
+        # ---------------------------------------------------------
+
+        table["i [mA]"] = table["i [A]"] * 1e3
+        table["pwr [mW]"] = table["pwr [W]"] * 1e3
+
+        # ---------------------------------------------------------
+        # Rename columns
+        # ---------------------------------------------------------
+
+        table = table.rename( columns={"instance": "Instance", "v [V]": "V [V]" })
+
+        # ---------------------------------------------------------
+        # Select final columns
+        # ---------------------------------------------------------
+
+        table = table[ ["Instance", "V [V]", "i [mA]","pwr [mW]" ] ]
+
+        # ---------------------------------------------------------
+        # Calculate total absolute power
+        # ---------------------------------------------------------
+
+        total_power_mW = table["pwr [mW]"].abs().sum()
+
+        # ---------------------------------------------------------
+        # Add total row
+        # ---------------------------------------------------------
+
+        total_row = pd.DataFrame(
+            [{
+                "Instance": "Total",
+                "V [V]": np.nan,
+                "i [mA]": np.nan,
+                "pwr [mW]": total_power_mW
+            }]
+        )
+
+        table = pd.concat( [table, total_row], ignore_index=True )
+
+        # ---------------------------------------------------------
+        # Round values
+        # ---------------------------------------------------------
+
+        table["V [V]"] = table["V [V]"].round(3)
+        table["i [mA]"] = table["i [mA]"].round(3)
+        table["pwr [mW]"] = table["pwr [mW]"].round(3)
+
+        # ---------------------------------------------------------
+        # Create table
+        # ---------------------------------------------------------
+
+        fig, ax = plt.subplots(figsize=(10, 3.5))
+        ax.axis("off")
+
+        tbl = ax.table(
+            cellText=table.values,
+            colLabels=table.columns,
+            cellLoc="center",
+            loc="center"
+        )
+
+        tbl.auto_set_font_size(False)
+        tbl.set_fontsize(12)
+        tbl.scale(1, 2.0)
+
+        # ---------------------------------------------------------
+        # Make Instance column wider
+        # ---------------------------------------------------------
+
+        for row in range(len(table) + 1):
+            tbl[(row, 0)].set_width(instance_width)
+
+        # ---------------------------------------------------------
+        # Highlight total row
+        # ---------------------------------------------------------
+
+        total_row_index = len(table)
+
+        for col in range(len(table.columns)):
+            tbl[(total_row_index, col)].set_text_props(weight="bold")
+
+        return table, fig, total_power_mW
